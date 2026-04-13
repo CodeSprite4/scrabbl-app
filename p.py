@@ -470,8 +470,6 @@ if st.session_state.page == "home":
     }
 
     .stButton {
-    margin-bottom: 0.75vw;
-    width: 700px;
     }
     </style>
 
@@ -512,6 +510,104 @@ if st.session_state.page == "home":
     
     if st.button("Super 3s"):
         st.session_state.page = "super"
+        st.rerun()
+
+    if st.button("Custom"):
+        st.session_state.page = "cu"
+        st.rerun()
+    
+if st.session_state.page == "cu":
+    # 🔥 SUPER 3s (quiz list)
+    quiz_words = """
+    TYE RIN MOL MEM UPO HOD MIR BYS UKE JOW DOL URD NOH POI ACK HUP FEH PHI TAW BOS HES RET ETH NEB KIS DEX KEX TAM FOO HOO ZEP KEA DEL LEA KOB POH WHA WAE DOM MOG LEY UMM TOD AMA EFT HYP FON RHO SAL PAK ICH YOW VAU VAW GHI ENG NAW LUN MAE DAK REE ELL RAS OIK LIB DIS KIP UTE LAT GOX MYC WYE POM YAW GIB ORT SAB SEC
+    """.split()
+
+    VOWELS = "AEIOU"
+    CONSONANTS = "".join([c for c in string.ascii_uppercase if c not in VOWELS])
+
+    # 😈 SMART FAKE GENERATOR
+    def generate_fake_word():
+        patterns = ["CVC", "CVC", "CVC", "CVV", "VCC"]
+        
+        while True:
+            pattern = random.choice(patterns)
+            word = ""
+            
+            for p in pattern:
+                if p == "C":
+                    word += random.choice(CONSONANTS)
+                else:
+                    word += random.choice(VOWELS)
+            
+            if "Q" in word and "U" not in word:
+                continue
+            
+            if any(x in word for x in ["ZX", "QZ", "JQ"]):
+                continue
+            
+            return word
+
+    def get_word():
+        if random.random() < 0.5:
+            word = random.choice(quiz_words)
+            is_real = True
+        else:
+            word = generate_fake_word()
+            is_real = word in three_letter_words  # ✅ check full dictionary
+        
+        return word, is_real
+
+    # session state
+    if "score" not in st.session_state:
+        st.session_state.score = 0
+    if "random_word" not in st.session_state:
+        st.session_state.random_word, st.session_state.is_real = get_word()
+    if "answered" not in st.session_state:
+        st.session_state.answered = False
+
+    # UI
+    st.markdown("""
+    <style>
+    .stApp { background-color: #ecd9c6; }
+    .divvy {
+        color: #dfbf9f;
+        background-color: #ffffff;
+        padding-top: 1vw;
+        padding-bottom: 1vw;
+        text-align: center;
+        font-size: 3vw;
+        border-radius: 1.5vw;
+        margin-bottom: 1.5vw;
+    }
+    </style>
+    <div class="divvy">Scrabble Practice - Custom</div>
+    """, unsafe_allow_html=True)
+
+    st.write("Is", st.session_state.random_word, "a valid Scrabble word?")
+
+    choice = st.radio("Choose one:", ["Yes", "No"])
+
+    if st.button("Check Answer") and not st.session_state.answered:
+        st.session_state.answered = True
+        
+        if (choice == "Yes" and st.session_state.is_real) or \
+        (choice == "No" and not st.session_state.is_real):
+            st.success("Yes, you got it right! 😎")
+            st.session_state.score += 1
+        else:
+            st.error("Sorry, you got it wrong 😬")
+
+    if st.button("Next Question"):
+        st.session_state.random_word, st.session_state.is_real = get_word()
+        st.session_state.answered = False
+        st.rerun()
+
+    st.write(f"Score: {st.session_state.score}")
+
+    st.image("https://upload.wikimedia.org/wikipedia/commons/6/6d/Scrabble_2.jpg")
+
+    if st.button("Back"):
+        st.session_state.page = "home"
         st.rerun()
 
 if st.session_state.page == "super":
@@ -717,7 +813,7 @@ if st.session_state.page == "c":
     """, unsafe_allow_html = True)
 
     st.write("Me - for making")
-    st.write("ChatGPT - for helping with word lists and generator")
+    st.write("ChatGPT - for helping with word lists and generator + super 3s/ custom")
     st.write("NASPA - for Cheat Sheet Lists :)")
     st.write("Will Anderson for Scrabble videos")
 
@@ -1052,7 +1148,7 @@ if st.session_state.page == "quiz4":
     result4 = ""
 
     if "random_num" not in st.session_state:
-        st.session_state.random_num = np.random.randint(0, Slen(bingoes))
+        st.session_state.random_num = np.random.randint(0, len(bingoes))
 
     st.write(" Name a bingo with", sorted(bingoes[st.session_state.random_num]), "! ( PLEASE ANSWER IN ALL CAPS ) Want to find more bingoes? Use the EASY BINGO CHECKER.")
 
