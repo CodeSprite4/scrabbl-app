@@ -441,6 +441,35 @@ URANIDE
 URINOSE
 UTERINE
 """.split())
+two_letter_words = np.array("""
+AA AB AD AE AG AH AI AL AM AN AR AS AT AW AX AY
+BA BE BI BO BY
+DA DE DO
+ED EF EH EL EM EN ER ES ET EW EX
+FA FE
+GI GO
+HA HE HI HM HO
+ID IF IN IS IT
+JO
+KA KI
+LA LI LO
+MA ME MI MM MO MU MY
+NA NE NO NU
+OD OE OF OH OI OK OM ON OP OR OS OW OX OY
+PA PE PI PO
+QI
+RE
+SH SI SO
+TA TE TI TO
+UH UM UN UP US UT
+WE WO
+XI XU
+YA YE YO
+ZA
+""".split())
+
+# fill these in later :)
+no_s_words = np.array(["AE", "AM", "AN", "AW","AX", "DE", "EH", "ET", "EW","EX", "HM", "IS", "JO","LO", "MM", "MY", "NA","NE", "OF", "OI", "OK","OS", "OW", "OX", "OY","SH", "TO", "UH", "US", "WE", "XU", "YO"])
 
 if "score" not in st.session_state:
     st.session_state.score = 0
@@ -479,6 +508,9 @@ if st.session_state.page == "home":
     if st.button(" Word Checker"):
         st.session_state.page = "check"
         st.rerun()
+    if st.button("2 Letter S Quiz"):
+        st.session_state.page = "quizsyy"
+        st.rerun()
     if st.button(" 3 Letter Quiz"):
         st.session_state.page = "quiz1"
         st.rerun()
@@ -515,7 +547,79 @@ if st.session_state.page == "home":
     if st.button("Custom"):
         st.session_state.page = "cu"
         st.rerun()
-    
+
+if st.session_state.page == "quizsyy":
+    st.markdown("""
+    <style>
+        .stApp {
+            background-color: #ecd9c6;
+        }
+
+        .divvy {
+            color: #dfbf9f;
+            background-color: #ffffff;
+            padding-top: 1vw;
+            padding-bottom: 1vw;
+            text-align: center;
+            font-size: 3vw;
+            border-radius: 1.5vw;
+            margin-bottom: 1.5vw;
+        }
+    </style>
+
+    <div class = "divvy">Scrabble Practice - 2 Letter S Hooks</div>
+    """, unsafe_allow_html=True)
+
+    if "random_two" not in st.session_state:
+        st.session_state.random_two = random.choice(two_letter_words)
+
+    if "answered_two" not in st.session_state:
+        st.session_state.answered_two = False
+
+    word = st.session_state.random_two
+
+    st.write("Does", word, "take an S hook?")
+
+    choice = st.radio(
+        "Choose one:",
+        ["Yes", "No"],
+        key="squiz_" + word
+    )
+
+    if st.button("Check Answer!!!") and not st.session_state.answered_two:
+
+        st.session_state.answered_two = True
+
+        takes_s = word not in no_s_words
+
+        if (choice == "Yes" and takes_s) or \
+        (choice == "No" and not takes_s):
+
+            st.success("Correct 😎")
+            st.session_state.score += 1
+
+        else:
+            if takes_s:
+                st.error("Wrong 😬 " + word + " DOES take an S.")
+            else:
+                st.error("Wrong 😬 " + word + " does NOT take an S.")
+
+    if st.button("Next Question"):
+
+        st.session_state.random_two = random.choice(two_letter_words)
+        st.session_state.answered_two = False
+        st.rerun()
+
+    st.write("Words that do NOT take an S:")
+    st.write(no_s_words)
+
+    st.write("Score:", st.session_state.score)
+
+    st.image("https://upload.wikimedia.org/wikipedia/commons/6/6d/Scrabble_2.jpg")
+
+    if st.button("Back"):
+        st.session_state.page = "home"
+        st.rerun()    
 if st.session_state.page == "cu":
     # 🔥 SUPER 3s (quiz list)
     quiz_words = """
@@ -603,6 +707,79 @@ if st.session_state.page == "cu":
         st.rerun()
 
     st.write(f"Score: {st.session_state.score}")
+
+    st.image("https://upload.wikimedia.org/wikipedia/commons/6/6d/Scrabble_2.jpg")
+
+    if st.button("Back"):
+        st.session_state.page = "home"
+        st.rerun()
+    
+if st.session_state.page == "quizs":
+    st.markdown("""
+    <style>
+        .stApp {
+            background-color: #ecd9c6;
+        }
+
+        .divvy {
+            color: #dfbf9f;
+            background-color: #ffffff;
+            padding-top: 1vw;
+            padding-bottom: 1vw;
+            text-align: center;
+            font-size: 3vw;
+            border-radius: 1.5vw;
+            margin-bottom: 1.5vw;
+        }
+    </style>
+
+    <div class = "divvy">Scrabble Practice - 2 Letter S Hooks</div>
+    """, unsafe_allow_html=True)
+
+    if "random_two" not in st.session_state:
+        st.session_state.random_two = random.choice(two_letter_words)
+
+    if "answered_two" not in st.session_state:
+        st.session_state.answered_two = False
+
+    word = st.session_state.random_two
+
+    st.write("Does", word, "take an S hook?")
+
+    choice = st.radio(
+        "Choose one:",
+        ["Yes", "No"],
+        key="squiz"
+    )
+
+    if st.button("Check Answer") and not st.session_state.answered_two:
+
+        st.session_state.answered_two = True
+
+        takes_s = word not in no_s_words
+
+        if (choice == "Yes" and takes_s) or \
+        (choice == "No" and not takes_s):
+
+            st.success("Correct 😎")
+            st.session_state.score += 1
+
+        else:
+            if takes_s:
+                st.error("Wrong 😬 " + word + " DOES take an S.")
+            else:
+                st.error("Wrong 😬 " + word + " does NOT take an S.")
+
+    if st.button("Next Question"):
+
+        st.session_state.random_two = random.choice(two_letter_words)
+        st.session_state.answered_two = False
+        st.rerun()
+
+    st.write("Words that do NOT take an S:")
+    st.write(no_s_words)
+
+    st.write("Score:", st.session_state.score)
 
     st.image("https://upload.wikimedia.org/wikipedia/commons/6/6d/Scrabble_2.jpg")
 
@@ -813,7 +990,7 @@ if st.session_state.page == "c":
     """, unsafe_allow_html = True)
 
     st.write("Me - for making")
-    st.write("ChatGPT - for helping with word lists and generator + super 3s/ custom")
+    st.write("ChatGPT - for helping with word lists AND generator AND some quizzes!!")
     st.write("NASPA - for Cheat Sheet Lists :)")
     st.write("Will Anderson for Scrabble videos")
 
