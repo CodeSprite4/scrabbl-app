@@ -547,7 +547,64 @@ if st.session_state.page == "home":
     if st.button("Custom"):
         st.session_state.page = "cu"
         st.rerun()
+    if st.button("Bad Quiz"):
+        st.session_state.page = "bad_quiz"
+        st.rerun()
+if st.session_state.page == "bad_quiz":
+    # 😈 BAD QUIZ
+    quiz_word = "BIR"
+    is_real = False  # BIR is NOT valid in NWL
 
+    # session state
+    if "bad_score" not in st.session_state:
+        st.session_state.bad_score = 0
+    if "bad_answered" not in st.session_state:
+        st.session_state.bad_answered = False
+
+    # UI
+    st.markdown("""
+    <style>
+    .stApp { background-color: #ecd9c6; }
+    .divvy {
+        color: #dfbf9f;
+        background-color: #ffffff;
+        padding-top: 1vw;
+        padding-bottom: 1vw;
+        text-align: center;
+        font-size: 3vw;
+        border-radius: 1.5vw;
+        margin-bottom: 1.5vw;
+    }
+    </style>
+    <div class="divvy">Bad Quiz</div>
+    """, unsafe_allow_html=True)
+
+    st.write("Is", quiz_word, "a valid Scrabble word?")
+
+    choice = st.radio("Choose one:", ["Yes", "No"])
+
+    if st.button("Check Answer") and not st.session_state.bad_answered:
+        st.session_state.bad_answered = True
+
+        if (choice == "Yes" and is_real) or \
+        (choice == "No" and not is_real):
+            st.success("Yes, you got it right! 😎")
+            st.session_state.bad_score += 1
+        else:
+            st.error("Sorry, you got it wrong 😬")
+
+    if st.button("Next Question"):
+        st.session_state.bad_answered = False
+        st.rerun()
+
+    st.write(f"Score: {st.session_state.bad_score}")
+
+    st.image("https://upload.wikimedia.org/wikipedia/commons/6/6d/Scrabble_2.jpg")
+
+    if st.button("Back"):
+        st.session_state.page = "home"
+        st.rerun()
+        
 if st.session_state.page == "quizsyy":
     st.markdown("""
     <style>
@@ -623,7 +680,7 @@ if st.session_state.page == "quizsyy":
 if st.session_state.page == "cu":
     # 🔥 SUPER 3s (quiz list)
     quiz_words = """
-    TYE RIN MOL MEM UPO HOD MIR BYS UKE JOW DOL URD NOH POI ACK HUP FEH PHI TAW BOS HES RET ETH NEB KIS DEX KEX TAM FOO HOO ZEP KEA DEL LEA KOB POH WHA WAE DOM MOG LEY UMM TOD AMA EFT HYP FON RHO SAL PAK ICH YOW VAU VAW GHI ENG NAW LUN MAE DAK REE ELL RAS OIK LIB DIS KIP UTE LAT GOX MYC WYE POM YAW GIB ORT SAB SEC
+    TYE RIN MOL MEM UPO HOD MIR BYS UKE JOW DOL URD NOH POI ACK HUP FEH PHI TAW BOS HES RET ETH NEB KIS DEX KEX TAM FOO HOO ZEP KEA DEL LEA KOB POH WHA WAE FON LEU REI KUE NEB UPO TAM KOP KEX NOH TYE OUD RIN PHI WYE RHO MEL RAS TAW NAW POH URD WOT OLE UMM POI YOW RYU TED HAE TET TAE MOL WAEDOM MOG LEY UMM TOD AMA EFT HYP FON RHO SAL PAK ICH YOW VAU VAW GHI ENG NAW LUN MAE DAK REE ELL RAS OIK LIB DIS KIP UTE LAT GOX MYC WYE POM YAW GIB ORT SAB SEC
     """.split()
 
     VOWELS = "AEIOU"
@@ -990,7 +1047,7 @@ if st.session_state.page == "c":
     """, unsafe_allow_html = True)
 
     st.write("Me - for making")
-    st.write("ChatGPT - for helping with word lists AND generator AND some quizzes!!")
+    st.write("ChatGPT - for helping with word lists and generator")
     st.write("NASPA - for Cheat Sheet Lists :)")
     st.write("Will Anderson for Scrabble videos")
 
