@@ -536,6 +536,10 @@ if st.session_state.page == "home":
         st.session_state.page = "v"
         st.rerun()
     
+    if st.button("2s for Popo"):
+        st.session_state.page = "random_2s"
+        st.rerun()
+    
     if st.button(" Stats"):
         st.session_state.page = "s"
         st.rerun()
@@ -549,6 +553,217 @@ if st.session_state.page == "home":
         st.rerun()
     if st.button("Bad Quiz"):
         st.session_state.page = "bad_quiz"
+        st.rerun()
+if st.session_state.page == "random_2s":
+    # ✨ RANDOM 2s QUIZ
+
+    import random
+    import string
+
+    # paste all valid 2-letter words here
+    quiz_words = """
+AA
+AB
+AD
+AE
+AG
+AH
+AI
+AL
+AM
+AN
+AR
+AS
+AT
+AW
+AX
+AY
+BA
+BE
+BI
+BO
+BY
+DA
+DE
+DO
+ED
+EF
+EH
+EL
+EM
+EN
+ER
+ES
+ET
+EW
+EX
+FA
+FE
+GI
+GO
+HA
+HE
+HI
+HM
+HO
+ID
+IF
+IN
+IS
+IT
+JO
+KA
+KI
+LA
+LI
+LO
+MA
+ME
+MI
+MM
+MO
+MU
+MY
+NA
+NE
+NO
+NU
+OD
+OE
+OF
+OH
+OI
+OK
+OM
+ON
+OP
+OR
+OS
+OW
+OX
+OY
+PA
+PE
+PI
+PO
+QI
+RE
+SH
+SI
+SO
+TA
+TE
+TI
+TO
+UH
+UM
+UN
+UP
+US
+UT
+WE
+WO
+XI
+XU
+YA
+YE
+YO
+ZA
+    """.split()
+
+    VOWELS = "AEIOU"
+    CONSONANTS = "".join([c for c in string.ascii_uppercase if c not in VOWELS])
+
+    # 😈 SMART FAKE 2-LETTER GENERATOR
+    def generate_fake_word():
+        patterns = ["CV", "VC"]  # only consonant-vowel or vowel-consonant
+
+        while True:
+            pattern = random.choice(patterns)
+            word = ""
+
+            for p in pattern:
+                if p == "C":
+                    word += random.choice(CONSONANTS)
+                else:
+                    word += random.choice(VOWELS)
+
+            # avoid weird Q words
+            if "Q" in word and "I" not in word:
+                continue
+
+            return word
+
+    # 🎲 choose real or fake
+    def get_word():
+        if random.random() < 0.3:
+            word = random.choice(quiz_words)
+            is_real = True
+        else:
+            word = generate_fake_word()
+
+            # ✅ if generated word accidentally IS real
+            is_real = word in quiz_words
+
+        return word, is_real
+
+    # session state
+    if "score_2s" not in st.session_state:
+        st.session_state.score_2s = 0
+
+    if "random_word_2s" not in st.session_state:
+        st.session_state.random_word_2s, st.session_state.is_real_2s = get_word()
+
+    if "answered_2s" not in st.session_state:
+        st.session_state.answered_2s = False
+
+    # UI
+    st.markdown("""
+    <style>
+    .stApp { background-color: #ecd9c6; }
+
+    .divvy {
+        color: #dfbf9f;
+        background-color: #ffffff;
+        padding-top: 1vw;
+        padding-bottom: 1vw;
+        text-align: center;
+        font-size: 3vw;
+        border-radius: 1.5vw;
+        margin-bottom: 1.5vw;
+    }
+    </style>
+
+    <div class="divvy">Scrabble Practice - Random 2s</div>
+    """, unsafe_allow_html=True)
+
+    st.write("Is", st.session_state.random_word_2s, "a valid Scrabble word?")
+
+    choice = st.radio("Choose one:", ["Yes", "No"])
+
+    if st.button("Check Answer") and not st.session_state.answered_2s:
+        st.session_state.answered_2s = True
+
+        if (choice == "Yes" and st.session_state.is_real_2s) or \
+           (choice == "No" and not st.session_state.is_real_2s):
+
+            st.success("Yes, you got it right! 😎")
+            st.session_state.score_2s += 1
+
+        else:
+            st.error("Sorry, you got it wrong 😬")
+
+    if st.button("Next Question"):
+        st.session_state.random_word_2s, st.session_state.is_real_2s = get_word()
+        st.session_state.answered_2s = False
+        st.rerun()
+
+    st.write(f"Score: {st.session_state.score_2s}")
+
+    st.image("https://upload.wikimedia.org/wikipedia/commons/6/6d/Scrabble_2.jpg")
+
+    if st.button("Back"):
+        st.session_state.page = "home"
         st.rerun()
 if st.session_state.page == "bad_quiz":
     # 😈 BAD QUIZ
@@ -680,7 +895,7 @@ if st.session_state.page == "quizsyy":
 if st.session_state.page == "cu":
     # 🔥 SUPER 3s (quiz list)
     quiz_words = """
-    TYE RIN MOL MEM UPO HOD MIR BYS UKE JOW DOL URD NOH POI ACK HUP FEH PHI TAW BOS HES RET ETH NEB KIS DEX KEX TAM FOO HOO ZEP KEA DEL LEA KOB POH WHA WAE FON LEU REI KUE NEB UPO TAM KOP KEX NOH TYE OUD RIN PHI WYE RHO MEL RAS TAW NAW POH URD WOT OLE UMM POI YOW RYU TED HAE TET TAE MOL WAEDOM MOG LEY UMM TOD AMA EFT HYP FON RHO SAL PAK ICH YOW VAU VAW GHI ENG NAW LUN MAE DAK REE ELL RAS OIK LIB DIS KIP UTE LAT GOX MYC WYE POM YAW GIB ORT SAB SEC
+    TYE RIN MOL MEM UPO HOD MIR BYS UKE JOW DOL URD NOH POI ACK HUP FEH PHI TAW BOS HES RET ETH NEB KIS DEX KEX TAM FOO HOO ZEP KEA DEL LEA KOB POH WHA WAE FON LEU REI KUE NEB UPO TAM KOP KEX NOH TYE OUD RIN PHI WYE RHO MEL RAS TAW NAW POH URD WOT OLE UMM POI YOW RYU TED HAE TET TAE MOL WAE DOM MOG LEY UMM TOD AMA EFT HYP FON RHO SAL PAK ICH YOW VAU VAW GHI ENG NAW LUN MAE DAK REE ELL RAS OIK LIB DIS KIP UTE LAT GOX MYC WYE POM YAW GIB ORT SAB SEC
     """.split()
 
     VOWELS = "AEIOU"
