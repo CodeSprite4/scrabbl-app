@@ -1654,6 +1654,7 @@ if st.session_state.page == "foursfrenzy":
 
     <div class = "divvy">Fours Frenzy</div>
     """, unsafe_allow_html = True)
+    
     # Paste your 4-letter word list here
     FOURS = """
     """.split()
@@ -1665,7 +1666,7 @@ if st.session_state.page == "foursfrenzy":
         # Common consonants
         consonants = "BCDFGHKLMNPRSTVWY"
     
-        # Rare letters
+        # Rare consonants
         rare_consonants = "JQXZ"
     
         patterns = [
@@ -1681,7 +1682,7 @@ if st.session_state.page == "foursfrenzy":
     
         for letter in pattern:
             if letter == "C":
-                # Rare letters appear only 10% of the time
+                # J Q X Z only appear rarely
                 if random.random() < 0.1:
                     word += random.choice(rare_consonants)
                 else:
@@ -1693,8 +1694,8 @@ if st.session_state.page == "foursfrenzy":
     
     
     def generate_word():
-        # 50% chance to use a real word if the list exists
-        if FOURS and random.random() < 0.5:
+        # 40% chance to pick a real word
+        if FOURS and random.random() < 0.4:
             return random.choice(FOURS).upper()
     
         return generate_fake_word()
@@ -1709,8 +1710,9 @@ if st.session_state.page == "foursfrenzy":
     if "score" not in st.session_state:
         st.session_state.score = 0
     
-    if "total" not in st.session_state:
-        st.session_state.total = 0
+    
+    st.title("4 Letter Quiz")
+    
     st.header(st.session_state.word)
     
     
@@ -1728,7 +1730,6 @@ if st.session_state.page == "foursfrenzy":
         else:
             st.error("Wrong!")
     
-        st.session_state.total += 1
         st.session_state.answered = True
     
     
@@ -1751,9 +1752,7 @@ if st.session_state.page == "foursfrenzy":
     
     st.divider()
     
-    st.write(
-        f"Score: {st.session_state.score} / {st.session_state.total}"
-    )
+    st.write(f"Score: {st.session_state.score}")
     if st.button("Back"):
         st.session_state.page = "home"
         st.rerun()
