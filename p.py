@@ -554,6 +554,9 @@ if st.session_state.page == "home":
     if st.button("Bad Quiz"):
         st.session_state.page = "bad_quiz"
         st.rerun()
+    if st.button("Fours Frenzy"):
+        st.session_state.page = "foursfrenzy"
+        st.rerun()
 if st.session_state.page == "random_2s":
     # ✨ RANDOM 2s QUIZ
 
@@ -1623,6 +1626,134 @@ if st.session_state.page == "quiz4":
 
         st.rerun()
 
+    if st.button("Back"):
+        st.session_state.page = "home"
+        st.rerun()
+        
+if st.session_state.page == "foursfrenzy":
+    st.markdown("""
+    <style>
+        .stApp {
+    background-color: #ecd9c6;
+    }
+    body {
+    background-color: #939393;
+    }
+    .divvy {
+    color: #dfbf9f;
+    background-color: #ffffff;
+    padding-top: 1vw;
+    padding-bottom: 1vw;
+
+    text-align: center;
+    font-size: 3vw;
+    border-radius: 1.5vw;
+    margin-bottom: 1.5vw;
+    }
+    </style>
+
+    <div class = "divvy">Fours Frenzy</div>
+    """, unsafe_allow_html = True)
+    # Paste your 4-letter word list here
+    FOURS = """
+    """.split()
+    
+    
+    def generate_fake_word():
+        vowels = "AEIOU"
+    
+        # Common consonants
+        consonants = "BCDFGHKLMNPRSTVWY"
+    
+        # Rare letters
+        rare_consonants = "JQXZ"
+    
+        patterns = [
+            "CVCV",
+            "CVCC",
+            "CCVC",
+            "CVVC"
+        ]
+    
+        pattern = random.choice(patterns)
+    
+        word = ""
+    
+        for letter in pattern:
+            if letter == "C":
+                # Rare letters appear only 10% of the time
+                if random.random() < 0.1:
+                    word += random.choice(rare_consonants)
+                else:
+                    word += random.choice(consonants)
+            else:
+                word += random.choice(vowels)
+    
+        return word
+    
+    
+    def generate_word():
+        # 50% chance to use a real word if the list exists
+        if FOURS and random.random() < 0.5:
+            return random.choice(FOURS).upper()
+    
+        return generate_fake_word()
+    
+    
+    if "word" not in st.session_state:
+        st.session_state.word = generate_word()
+    
+    if "answered" not in st.session_state:
+        st.session_state.answered = False
+    
+    if "score" not in st.session_state:
+        st.session_state.score = 0
+    
+    if "total" not in st.session_state:
+        st.session_state.total = 0
+    st.header(st.session_state.word)
+    
+    
+    def check_answer(answer):
+        if st.session_state.answered:
+            return
+    
+        valid = st.session_state.word.upper() in [
+            word.upper() for word in FOURS
+        ]
+    
+        if answer == valid:
+            st.success("Correct!")
+            st.session_state.score += 1
+        else:
+            st.error("Wrong!")
+    
+        st.session_state.total += 1
+        st.session_state.answered = True
+    
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button("YES"):
+            check_answer(True)
+    
+    with col2:
+        if st.button("NO"):
+            check_answer(False)
+    
+    
+    if st.button("Next Question"):
+        st.session_state.word = generate_word()
+        st.session_state.answered = False
+        st.rerun()
+    
+    
+    st.divider()
+    
+    st.write(
+        f"Score: {st.session_state.score} / {st.session_state.total}"
+    )
     if st.button("Back"):
         st.session_state.page = "home"
         st.rerun()
