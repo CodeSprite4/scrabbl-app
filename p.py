@@ -1663,8 +1663,6 @@ AAHS AALS ABAS ABBA ABBE ABED ABET ABLE ABLY ABOS ABRI ABUT ABYE ABYS ACAI ACED 
     """
     
     fours = fours.upper().split()
-    
-    
     # -------------------------
     # Fake word generator
     # -------------------------
@@ -1720,6 +1718,9 @@ AAHS AALS ABAS ABBA ABBE ABED ABET ABLE ABLY ABOS ABRI ABUT ABYE ABYS ACAI ACED 
     if "answered" not in st.session_state:
         st.session_state.answered = False
     
+    if "message" not in st.session_state:
+        st.session_state.message = ""
+    
     
     
     # -------------------------
@@ -1743,6 +1744,9 @@ AAHS AALS ABAS ABBA ABBE ABED ABET ABLE ABLY ABOS ABRI ABUT ABYE ABYS ACAI ACED 
     
                 if st.session_state.word in fours:
                     st.session_state.score += 1
+                    st.session_state.message = "Correct!"
+                else:
+                    st.session_state.message = "Wrong!"
     
                 st.session_state.answered = True
                 st.rerun()
@@ -1753,6 +1757,9 @@ AAHS AALS ABAS ABBA ABBE ABED ABET ABLE ABLY ABOS ABRI ABUT ABYE ABYS ACAI ACED 
     
                 if st.session_state.word not in fours:
                     st.session_state.score += 1
+                    st.session_state.message = "Correct!"
+                else:
+                    st.session_state.message = "Wrong!"
     
                 st.session_state.answered = True
                 st.rerun()
@@ -1760,11 +1767,16 @@ AAHS AALS ABAS ABBA ABBE ABED ABET ABLE ABLY ABOS ABRI ABUT ABYE ABYS ACAI ACED 
     
     else:
     
+        if st.session_state.message == "Correct!":
+            st.success(st.session_state.message)
+        else:
+            st.error(st.session_state.message)
+    
         if st.button("Next Question"):
             st.session_state.word = get_question()
             st.session_state.answered = False
+            st.session_state.message = ""
             st.rerun()
-    
     if st.button("Back"):
         st.session_state.page = "home"
         st.rerun()
