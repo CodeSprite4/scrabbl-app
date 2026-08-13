@@ -2,8 +2,12 @@
 import streamlit as st
 import random
 import string
+import json
 
 import numpy as np
+
+# pip install streamlit-local-storage
+from streamlit_local_storage import LocalStorage
 
 three_letter_words = np.array("""
 AAH AAL AAS ABA ABS ABY ACE ACK ACT ADD ADO ADS ADZ AFF AFT
@@ -556,6 +560,9 @@ if st.session_state.page == "home":
         st.rerun()
     if st.button("Fours Frenzy"):
         st.session_state.page = "foursfrenzy"
+        st.rerun()
+    if st.button("My Word List"):
+        st.session_state.page = "mywordlist"
         st.rerun()
 if st.session_state.page == "random_2s":
     # ✨ RANDOM 2s QUIZ
@@ -1654,8 +1661,21 @@ if st.session_state.page == "foursfrenzy":
 
     <div class = "divvy">Fours Frenzy</div>
     """, unsafe_allow_html = True)
-    
-            
+
+    # --- local storage setup for "My Word List" ---
+    localS4 = LocalStorage()
+
+    if "my_word_list" not in st.session_state:
+        try:
+            saved = localS4.getItem("my_four_word_list")
+            st.session_state.my_word_list = json.loads(saved) if saved else []
+        except Exception:
+            st.session_state.my_word_list = []
+
+    if st.button("📋 My Word List"):
+        st.session_state.page = "mywordlist"
+        st.rerun()
+
     # Paste your 4-letter words here
     fours = """
     ARIE AROS BAES BRUH CATH COPI CRIA CRIP CUCK DOXX FAMs FAVS FOLX GANK GOYS GUAC HAOS HOSS JEDI KORI LARP LEWK LOCS MANI MARG MILF MPOX NARE NOOB OPPO PEDI PHEO PUBE PWNS RABI ROID SPAZ STAN STIM TWAT VAXX WELP YAJE YEET ZENS ZUKE
@@ -1771,12 +1791,80 @@ AAHS AALS ABAS ABBA ABBE ABED ABET ABLE ABLY ABOS ABRI ABUT ABYE ABYS ACAI ACED 
             st.success(st.session_state.message)
         else:
             st.error(st.session_state.message)
-    
+
+        # If the word shown is an actual valid word, let the user save it
+        if st.session_state.word in fours:
+            if st.session_state.word in st.session_state.my_word_list:
+                st.caption(f"'{st.session_state.word}' is already in your list ✅")
+            else:
+                if st.button(f"➕ Add '{st.session_state.word}' to My List"):
+                    st.session_state.my_word_list.append(st.session_state.word)
+                    localS4.setItem("my_four_word_list", json.dumps(st.session_state.my_word_list))
+                    st.success(f"Added '{st.session_state.word}' to your list!")
+
         if st.button("Next Question"):
             st.session_state.word = get_question()
             st.session_state.answered = False
             st.session_state.message = ""
             st.rerun()
+    if st.button("Back"):
+        st.session_state.page = "home"
+        st.rerun()
+
+if st.session_state.page == "mywordlist":
+    st.markdown("""
+    <style>
+        .stApp {
+    background-color: #ecd9c6;
+    }
+    body {
+    background-color: #939393;
+    }
+    .divvy {
+    color: #dfbf9f;
+    background-color: #ffffff;
+    padding-top: 1vw;
+    padding-bottom: 1vw;
+
+    text-align: center;
+    font-size: 3vw;
+    border-radius: 1.5vw;
+    margin-bottom: 1.5vw;
+    }
+    </style>
+
+    <div class = "divvy">My Word List</div>
+    """, unsafe_allow_html = True)
+
+    st.write("Words you've saved from Fours Frenzy, stored locally in your browser.")
+
+    localS_list = LocalStorage()
+
+    if "my_word_list" not in st.session_state:
+        try:
+            saved = localS_list.getItem("my_four_word_list")
+            st.session_state.my_word_list = json.loads(saved) if saved else []
+        except Exception:
+            st.session_state.my_word_list = []
+
+    if st.session_state.my_word_list:
+        for w in sorted(st.session_state.my_word_list):
+            col1, col2 = st.columns([4, 1])
+            with col1:
+                st.write(w)
+            with col2:
+                if st.button("❌", key="remove_" + w):
+                    st.session_state.my_word_list.remove(w)
+                    localS_list.setItem("my_four_word_list", json.dumps(st.session_state.my_word_list))
+                    st.rerun()
+
+        if st.button("Clear Entire List"):
+            st.session_state.my_word_list = []
+            localS_list.setItem("my_four_word_list", json.dumps([]))
+            st.rerun()
+    else:
+        st.write("Your list is empty! Go answer some words correctly in Fours Frenzy and add them here.")
+
     if st.button("Back"):
         st.session_state.page = "home"
         st.rerun()
