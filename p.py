@@ -1148,11 +1148,6 @@ if st.session_state.page == "super":
         else:
             st.error("Sorry, you got it wrong 😬")
 
-    if st.session_state.answered and st.session_state.is_real:
-        if st.session_state.random_word in st.session_state.my_three_word_list:
-            st.caption(f"'{st.session_state.random_word}' is already in your list ✅")
-        else:
-
 
     if st.button("Next Question"):
         st.session_state.random_word, st.session_state.is_real = get_word()
