@@ -1152,10 +1152,7 @@ if st.session_state.page == "super":
         if st.session_state.random_word in st.session_state.my_three_word_list:
             st.caption(f"'{st.session_state.random_word}' is already in your list ✅")
         else:
-            if st.button(f"➕ Add '{st.session_state.random_word}' to My List"):
-                st.session_state.my_three_word_list.append(st.session_state.random_word)
-                localS3.setItem("my_three_word_list", json.dumps(st.session_state.my_three_word_list))
-                st.success(f"Added '{st.session_state.random_word}' to your list!")
+
 
     if st.button("Next Question"):
         st.session_state.random_word, st.session_state.is_real = get_word()
