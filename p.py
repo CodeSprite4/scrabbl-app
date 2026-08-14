@@ -1121,6 +1121,20 @@ if st.session_state.page == "super":
     <div class="divvy">Scrabble Practice - Super 3s Challenge</div>
     """, unsafe_allow_html=True)
 
+    # --- local storage setup for "My Word List" (threes) ---
+    localS3 = LocalStorage()
+
+    if "my_three_word_list" not in st.session_state:
+        try:
+            saved3 = localS3.getItem("my_three_word_list")
+            st.session_state.my_three_word_list = json.loads(saved3) if saved3 else []
+        except Exception:
+            st.session_state.my_three_word_list = []
+
+    if st.button("📋 My Word List"):
+        st.session_state.page = "mywordlist"
+        st.rerun()
+
     st.write("Is", st.session_state.random_word, "a valid Scrabble word?")
 
     choice = st.radio("Choose one:", ["Yes", "No"])
@@ -1133,6 +1147,15 @@ if st.session_state.page == "super":
             st.session_state.score += 1
         else:
             st.error("Sorry, you got it wrong 😬")
+
+    if st.session_state.answered and st.session_state.is_real:
+        if st.session_state.random_word in st.session_state.my_three_word_list:
+            st.caption(f"'{st.session_state.random_word}' is already in your list ✅")
+        else:
+            if st.button(f"➕ Add '{st.session_state.random_word}' to My List"):
+                st.session_state.my_three_word_list.append(st.session_state.random_word)
+                localS3.setItem("my_three_word_list", json.dumps(st.session_state.my_three_word_list))
+                st.success(f"Added '{st.session_state.random_word}' to your list!")
 
     if st.button("Next Question"):
         st.session_state.random_word, st.session_state.is_real = get_word()
@@ -1750,7 +1773,7 @@ AAHS AALS ABAS ABBA ABBE ABED ABET ABLE ABLY ABOS ABRI ABUT ABYE ABYS ACAI ACED 
     st.title("4 Letter Quiz")
     
     st.write("Score:", st.session_state.score)
-    
+
     st.header(st.session_state.word)
     
     
@@ -1767,7 +1790,7 @@ AAHS AALS ABAS ABBA ABBE ABED ABET ABLE ABLY ABOS ABRI ABUT ABYE ABYS ACAI ACED 
                     st.session_state.message = "Correct!"
                 else:
                     st.session_state.message = "Wrong!"
-    
+
                 st.session_state.answered = True
                 st.rerun()
     
@@ -1780,7 +1803,7 @@ AAHS AALS ABAS ABBA ABBE ABED ABET ABLE ABLY ABOS ABRI ABUT ABYE ABYS ACAI ACED 
                     st.session_state.message = "Correct!"
                 else:
                     st.session_state.message = "Wrong!"
-    
+
                 st.session_state.answered = True
                 st.rerun()
     
@@ -1836,7 +1859,7 @@ if st.session_state.page == "mywordlist":
     <div class = "divvy">My Word List</div>
     """, unsafe_allow_html = True)
 
-    st.write("Words you've saved from Fours Frenzy, stored locally in your browser.")
+    st.write("Words you've saved, stored locally in your browser.")
 
     localS_list = LocalStorage()
 
@@ -1847,23 +1870,54 @@ if st.session_state.page == "mywordlist":
         except Exception:
             st.session_state.my_word_list = []
 
+    if "my_three_word_list" not in st.session_state:
+        try:
+            saved3 = localS_list.getItem("my_three_word_list")
+            st.session_state.my_three_word_list = json.loads(saved3) if saved3 else []
+        except Exception:
+            st.session_state.my_three_word_list = []
+
+    st.subheader("Fours")
+
     if st.session_state.my_word_list:
         for w in sorted(st.session_state.my_word_list):
             col1, col2 = st.columns([4, 1])
             with col1:
                 st.write(w)
             with col2:
-                if st.button("❌", key="remove_" + w):
+                if st.button("❌", key="remove4_" + w):
                     st.session_state.my_word_list.remove(w)
                     localS_list.setItem("my_four_word_list", json.dumps(st.session_state.my_word_list))
                     st.rerun()
 
-        if st.button("Clear Entire List"):
+        if st.button("Clear Fours List"):
             st.session_state.my_word_list = []
             localS_list.setItem("my_four_word_list", json.dumps([]))
             st.rerun()
     else:
-        st.write("Your list is empty! Go answer some words correctly in Fours Frenzy and add them here.")
+        st.write("Your fours list is empty! Go answer some words correctly in Fours Frenzy and add them here.")
+
+    st.divider()
+
+    st.subheader("Threes")
+
+    if st.session_state.my_three_word_list:
+        for w in sorted(st.session_state.my_three_word_list):
+            col1, col2 = st.columns([4, 1])
+            with col1:
+                st.write(w)
+            with col2:
+                if st.button("❌", key="remove3_" + w):
+                    st.session_state.my_three_word_list.remove(w)
+                    localS_list.setItem("my_three_word_list", json.dumps(st.session_state.my_three_word_list))
+                    st.rerun()
+
+        if st.button("Clear Threes List"):
+            st.session_state.my_three_word_list = []
+            localS_list.setItem("my_three_word_list", json.dumps([]))
+            st.rerun()
+    else:
+        st.write("Your threes list is empty! Go answer some words correctly in Super 3s Challenge and add them here.")
 
     if st.button("Back"):
         st.session_state.page = "home"
