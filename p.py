@@ -1344,7 +1344,6 @@ if st.session_state.page == "threehooks":
         if st.button("Back", key=f"th_back_{base}"):
             st.session_state.page = "home"
             st.rerun()
-```
 if st.session_state.page == "s":
     st.markdown("""
     <style>
