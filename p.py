@@ -1199,93 +1199,152 @@ if st.session_state.page == "super":
         st.session_state.page = "home"
 
 if st.session_state.page == "threehooks":
-    st.markdown("""
-    <style>
-        .stApp {
-    background-color: #ecd9c6;
-    }
-    body {
-    background-color: #939393;
-    }
-    .divvy {
-    color: #dfbf9f;
-    background-color: #ffffff;
-    padding-top: 1vw;
-    padding-bottom: 1vw;
+    st.title("Three Hooks")
+    st.markdown("Pick the letter that hooks onto the three-letter word to make a valid four-letter word.")
 
-    text-align: center;
-    font-size: 3vw;
-    border-radius: 1.5vw;
-    margin-bottom: 1.5vw;
-    }
-    </style>
+    # Build a fresh question and cache it in session state so reruns keep the same data
+    def new_threehooks_question():
+        base = random.choice(three_letter_words)
 
-    <div class = "divvy">Threes Hooks Quiz</div>
-    """, unsafe_allow_html = True)
+        # Discover every valid front and back hook for this base word
+        front_hooks = []
+        back_hooks = []
+        for letter in string.ascii_lowercase:
+            if (letter + base) in four_letter_words:
+                front_hooks.append(letter)
+            if (base + letter) in four_letter_words:
+                back_hooks.append(letter)
 
-    # use the full valid word lists (global), not the user's personal saved lists
-    threes_pool = list(three_letter_words)
-    fours_pool = list(four_letter_words)
+        st.session_state.th_base = base
+        st.session_state.th_front_hooks = front_hooks
+        st.session_state.th_back_hooks = back_hooks
 
-    def get_hook_question():
-        word = random.choice(threes_pool)
-        alphabet = string.ascii_uppercase
+        # Assemble the three letter choices. Guarantee at least one working hook
+        # is present when the base actually has a valid hook.
+        valid_letters = list(set(front_hooks + back_hooks))
+        choices = set()
 
-        real_hooks = []
-        for letter in alphabet:
-            front = letter + word
-            back = word + letter
-            if front in fours_pool or back in fours_pool:
-                real_hooks.append(letter)
+        if valid_letters:
+            choices.add(random.choice(valid_letters))
 
-        if real_hooks and random.random() < 0.6:
-            answer_letter = random.choice(real_hooks)
-            distractor_pool = [l for l in alphabet if l not in real_hooks]
-            random.shuffle(distractor_pool)
-            letters = [answer_letter] + distractor_pool[:2]
-            random.shuffle(letters)
-            correct = answer_letter
+        while len(choices) < 3:
+            choices.add(random.choice(string.ascii_lowercase))
+
+        choice_list = list(choices)[:3]
+        random.shuffle(choice_list)
+
+        st.session_state.th_choices = choice_list
+        st.session_state.th_answered = False
+        st.session_state.th_scored = False
+
+    # First-time setup
+    if "th_base" not in st.session_state:
+        new_threehooks_question()
+
+    base = st.session_state.th_base
+    front_hooks = st.session_state.th_front_hooks
+    back_hooks = st.session_state.th_back_hooks
+    choice_list = st.session_state.th_choices
+
+    if "score" not in st.session_state:
+        st.session_state.score = 0
+
+    st.subheader(f"Three-letter word: {base.upper()}")
+
+    options = [c.upper() for c in choice_list] + ["None of the above"]
+
+    # Unique radio key per base word prevents widget-state collisions across reruns
+    selection = st.radio(
+        "Which letter makes a valid four-letter word?",
+        options,
+        key=f"th_radio_{base}"
+    )
+
+    if st.button("Submit", key=f"th_submit_{base}"):
+        st.session_state.th_answered = True
+        st.session_state.th_selection = selection
+
+    # Show feedback if the question has been answered
+    if st.session_state.get("th_answered", False):
+        selection = st.session_state.th_selection
+
+        def hook_type_sentence(letter):
+            is_front = letter in front_hooks
+            is_back = letter in back_hooks
+            if is_front and is_back:
+                return "It works as both a front hook and a back hook."
+            if is_front:
+                return "It is a front hook."
+            if is_back:
+                return "It is a back hook."
+            return ""
+
+        if selection == "None of the above":
+            # Correct only when none of the shown letters hook onto the base
+            any_valid = any(
+                (c in front_hooks or c in back_hooks) for c in choice_list
+            )
+            if not any_valid:
+                st.success("Yes, none of the listed letters make a valid front or back hook.")
+                if not st.session_state.th_scored:
+                    st.session_state.score += 1
+                    st.session_state.th_scored = True
+            else:
+                # Name a letter that actually works and show the good word
+                good_letter = next(
+                    c for c in choice_list if c in front_hooks or c in back_hooks
+                )
+                if good_letter in front_hooks:
+                    good_word = (good_letter + base).upper()
+                else:
+                    good_word = (base + good_letter).upper()
+                st.error(f"No, at least one listed letter works. {good_word} is good.")
+                st.info(hook_type_sentence(good_letter))
         else:
-            distractor_pool = [l for l in alphabet if l not in real_hooks]
-            random.shuffle(distractor_pool)
-            letters = distractor_pool[:3]
-            correct = "None of the above"
+            chosen = selection.lower()
+            is_front = chosen in front_hooks
+            is_back = chosen in back_hooks
 
-        options = letters + ["None of the above"]
-        return word, options, correct
+            if is_front or is_back:
+                # Prefer showing the front form if it exists, otherwise the back form
+                if is_front:
+                    good_word = (chosen + base).upper()
+                else:
+                    good_word = (base + chosen).upper()
+                st.success(f"Yes, {good_word} is good!")
+                st.info(hook_type_sentence(chosen))
+                if not st.session_state.th_scored:
+                    st.session_state.score += 1
+                    st.session_state.th_scored = True
+            else:
+                # The chosen letter fails. Report the bad word, then point to a good one.
+                bad_word = (chosen + base).upper()
 
-    if "hook_word" not in st.session_state:
-        st.session_state.hook_word, st.session_state.hook_options, st.session_state.hook_correct = get_hook_question()
+                if front_hooks:
+                    good_letter = front_hooks[0]
+                    good_word = (good_letter + base).upper()
+                    st.error(f"No, {bad_word} is bad, {good_word} is good.")
+                    st.info("The correct hook is a front hook.")
+                elif back_hooks:
+                    good_letter = back_hooks[0]
+                    good_word = (base + good_letter).upper()
+                    st.error(f"No, {bad_word} is bad, {good_word} is good.")
+                    st.info("The correct hook is a back hook.")
+                else:
+                    st.error(f"No, {bad_word} is bad. This word has no valid front or back hook.")
 
-    if "hook_answered" not in st.session_state:
-        st.session_state.hook_answered = False
+    st.markdown(f"**Score: {st.session_state.score}**")
 
-    st.write(f"Which of these letters is a real hook for **{st.session_state.hook_word}** (front or back)?")
-
-    option_labels = [f"{i+1}. {opt}" for i, opt in enumerate(st.session_state.hook_options)]
-    picked_label = st.radio("Choose one:", option_labels, key="hook_radio_" + st.session_state.hook_word)
-    picked_index = option_labels.index(picked_label)
-    picked_option = st.session_state.hook_options[picked_index]
-
-    if st.button("Check Answer") and not st.session_state.hook_answered:
-        st.session_state.hook_answered = True
-        if picked_option == st.session_state.hook_correct:
-            st.success("Correct 😎")
-            st.session_state.score += 1
-        else:
-            st.error(f"Wrong 😬 The correct answer was: {st.session_state.hook_correct}")
-
-    if st.button("Next Question"):
-        st.session_state.hook_word, st.session_state.hook_options, st.session_state.hook_correct = get_hook_question()
-        st.session_state.hook_answered = False
-        st.rerun()
-
-    st.write("Score:", st.session_state.score)
-
-    if st.button("Back"):
-        st.session_state.page = "home"
-        st.rerun()
-
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Next Question", key=f"th_next_{base}"):
+            new_threehooks_question()
+            st.rerun()
+    with col2:
+        if st.button("Back", key=f"th_back_{base}"):
+            st.session_state.page = "home"
+            st.rerun()
+```
 if st.session_state.page == "s":
     st.markdown("""
     <style>
