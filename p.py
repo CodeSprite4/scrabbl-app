@@ -1154,16 +1154,6 @@ if st.session_state.page == "super":
     <div class="divvy">Scrabble Practice - Super 3s Challenge</div>
     """, unsafe_allow_html=True)
 
-    # --- local storage setup for "My Word List" (threes) ---
-    localS3 = LocalStorage()
-
-    if "my_three_word_list" not in st.session_state:
-        try:
-            saved3 = localS3.getItem("my_three_word_list")
-            st.session_state.my_three_word_list = json.loads(saved3) if saved3 else []
-        except Exception:
-            st.session_state.my_three_word_list = []
-
     st.write("Is", st.session_state.random_word, "a valid Scrabble word?")
 
     choice = st.radio("Choose one:", ["Yes", "No"])
@@ -1220,47 +1210,62 @@ if st.session_state.page == "threehooks":
 
     def get_hook_question():
         word = random.choice(threes_pool)
-        alphabet = string.ascii_uppercase
+        alphabet = list(string.ascii_uppercase)
+        random.shuffle(alphabet)
 
-        real_hooks = []
-        for letter in alphabet:
+        # find every real (word, letter, position) hook for this base word
+        real_candidates = []
+        for letter in string.ascii_uppercase:
             front = letter + word
             back = word + letter
-            if front in fours_pool or back in fours_pool:
-                real_hooks.append(letter)
+            if front in fours_pool:
+                real_candidates.append(front)
+            if back in fours_pool:
+                real_candidates.append(back)
 
-        if real_hooks and random.random() < 0.6:
-            answer_letter = random.choice(real_hooks)
-            distractor_pool = [l for l in alphabet if l not in real_hooks]
-            random.shuffle(distractor_pool)
-            letters = [answer_letter] + distractor_pool[:2]
-            random.shuffle(letters)
-            correct = answer_letter
+        use_real = bool(real_candidates) and random.random() < 0.8
+
+        chosen_words = []
+        used_letters = set()
+
+        if use_real:
+            correct = random.choice(real_candidates)
+            chosen_words.append(correct)
+            # figure out which letter that used, so we don't reuse it as a distractor
+            if correct[1:] == word:
+                used_letters.add(correct[0])
+            else:
+                used_letters.add(correct[-1])
         else:
-            distractor_pool = [l for l in alphabet if l not in real_hooks]
-            random.shuffle(distractor_pool)
-            letters = distractor_pool[:3]
             correct = "None of the above"
 
-        options = letters + ["None of the above"]
+        # fill remaining slots with fake (non-valid) candidate words
+        idx = 0
+        while len(chosen_words) < 3 and idx < len(alphabet):
+            letter = alphabet[idx]
+            idx += 1
+            if letter in used_letters:
+                continue
+            position = random.choice(["front", "back"])
+            candidate = letter + word if position == "front" else word + letter
+            if candidate in fours_pool or candidate in chosen_words:
+                continue
+            chosen_words.append(candidate)
+            used_letters.add(letter)
+
+        random.shuffle(chosen_words)
+        options = chosen_words + ["None of the above"]
         return word, options, correct
 
-    def evaluate_hook(word, letter):
-        front_word = letter + word
-        back_word = word + letter
-        front_valid = front_word in fours_pool
-        back_valid = back_word in fours_pool
-
-        if front_valid and back_valid:
-            position = "both front and back"
-        elif front_valid:
+    def evaluate_word_hook(word, candidate):
+        if candidate[1:] == word:
             position = "front"
-        elif back_valid:
+        elif candidate[:len(word)] == word:
             position = "back"
         else:
             position = None
-
-        return front_valid, back_valid, position, front_word, back_word
+        valid = candidate in fours_pool
+        return valid, position
 
     if "hook_word" not in st.session_state:
         st.session_state.hook_word, st.session_state.hook_options, st.session_state.hook_correct = get_hook_question()
@@ -1268,7 +1273,7 @@ if st.session_state.page == "threehooks":
     if "hook_answered" not in st.session_state:
         st.session_state.hook_answered = False
 
-    st.write(f"Which of these letters is a real hook for **{st.session_state.hook_word}** (front or back)?")
+    st.write(f"Hooks for **{st.session_state.hook_word}**:")
 
     option_labels = [f"{i+1}. {opt}" for i, opt in enumerate(st.session_state.hook_options)]
     picked_label = st.radio("Choose one:", option_labels, key="hook_radio_" + st.session_state.hook_word)
@@ -1281,23 +1286,21 @@ if st.session_state.page == "threehooks":
         word = st.session_state.hook_word
 
         if picked_option != "None of the above":
-            front_valid, back_valid, position, front_word, back_word = evaluate_hook(word, picked_option)
+            valid, position = evaluate_word_hook(word, picked_option)
 
-            if front_valid or back_valid:
-                resulting_word = front_word if front_valid else back_word
-                st.success(f"✅ Valid! '{picked_option}' is a real **{position} hook** — it forms the word **{resulting_word}**.")
+            if valid:
+                st.success(f"✅ Valid! **{picked_option}** is a real word — a **{position} hook** on '{word}'.")
                 st.session_state.score += 1
             else:
-                st.error(f"❌ Not valid. Neither **{front_word}** nor **{back_word}** is a real word, so '{picked_option}' isn't a hook for '{word}'.")
+                st.error(f"❌ Not valid. **{picked_option}** isn't a real word.")
         else:
             if st.session_state.hook_correct == "None of the above":
-                st.success(f"✅ Correct — none of the shown letters form a valid word (front or back) with '{word}'.")
+                st.success(f"✅ Correct — none of the shown words are real.")
                 st.session_state.score += 1
             else:
-                correct_letter = st.session_state.hook_correct
-                front_valid, back_valid, position, front_word, back_word = evaluate_hook(word, correct_letter)
-                resulting_word = front_word if front_valid else back_word
-                st.error(f"❌ Not quite. '{correct_letter}' actually IS a valid **{position} hook** — it forms the word **{resulting_word}**.")
+                correct_word = st.session_state.hook_correct
+                _, position = evaluate_word_hook(word, correct_word)
+                st.error(f"❌ Not quite. **{correct_word}** actually IS a real word — a **{position} hook** on '{word}'.")
 
     if st.button("Next Question"):
         st.session_state.hook_word, st.session_state.hook_options, st.session_state.hook_correct = get_hook_question()
@@ -2037,13 +2040,6 @@ if st.session_state.page == "mywordlist":
         except Exception:
             st.session_state.my_word_list = []
 
-    if "my_three_word_list" not in st.session_state:
-        try:
-            saved3 = localS_list.getItem("my_three_word_list")
-            st.session_state.my_three_word_list = json.loads(saved3) if saved3 else []
-        except Exception:
-            st.session_state.my_three_word_list = []
-
     st.subheader("Fours")
 
     if st.session_state.my_word_list:
@@ -2063,28 +2059,6 @@ if st.session_state.page == "mywordlist":
             st.rerun()
     else:
         st.write("Your fours list is empty! Go answer some words correctly in Fours Frenzy and add them here.")
-
-    st.divider()
-
-    st.subheader("Threes")
-
-    if st.session_state.my_three_word_list:
-        for w in sorted(st.session_state.my_three_word_list):
-            col1, col2 = st.columns([4, 1])
-            with col1:
-                st.write(w)
-            with col2:
-                if st.button("❌", key="remove3_" + w):
-                    st.session_state.my_three_word_list.remove(w)
-                    localS_list.setItem("my_three_word_list", json.dumps(st.session_state.my_three_word_list))
-                    st.rerun()
-
-        if st.button("Clear Threes List"):
-            st.session_state.my_three_word_list = []
-            localS_list.setItem("my_three_word_list", json.dumps([]))
-            st.rerun()
-    else:
-        st.write("Your threes list is empty! Go answer some words correctly in Super 3s Challenge and add them here.")
 
     if st.button("Back"):
         st.session_state.page = "home"
